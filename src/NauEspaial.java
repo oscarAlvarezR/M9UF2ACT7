@@ -45,11 +45,18 @@ public class NauEspaial extends javax.swing.JFrame {
 }
 
 
+
 class PanelNau extends JPanel implements Runnable, KeyListener{   
 	private int numNaus=3;    
 	Nau[] nau;
 	Nau nauPropia;
-	disparo disparo;
+	public int disparosEliminados = 0;
+	public boolean disparado = false;
+	public Vector<disparo> vectorDisparos = new Vector<disparo>(0);
+//	public Vector<Integer> vector = new Vector<>();
+	public int contadorDisparos = 0;
+	
+	
 
 	public PanelNau(){        
 		nau = new Nau[numNaus];
@@ -78,6 +85,8 @@ class PanelNau extends JPanel implements Runnable, KeyListener{
 
 	}
 
+	
+	
 	public void run() {
 		System.out.println("Inici fil repintar");
 		while(true) {
@@ -90,36 +99,53 @@ class PanelNau extends JPanel implements Runnable, KeyListener{
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g);
 		
+		for(int i=0; i<nau.length;++i) {
+			nau[i].pinta(g);
+			nauPropia.pinta(g);
+		}
 		
 		
-		for(int i=0; i<nau.length;++i) nau[i].pinta(g);
-		nauPropia.pinta(g);
-		if (disparo != null) {
-			disparo.pinta(g);
-			if (disparo.getY() > 580 || disparo.getY() < 0) {
-				disparo.noSeguir();
+		if (disparado) {
+			
+			for (int i = 0; i < vectorDisparos.size(); i++) {
+
+					vectorDisparos.get(i).pinta(g);
+					if (vectorDisparos.get(i).getY() < 0) {
+						vectorDisparos.get(i).noSeguir();
+						System.out.println(i);
+						vectorDisparos.remove(i);
+					}
 			}
 		}
 	}
-
 
 	// Metodes necesaris per gestionar esdeveniments del teclat
 	@Override
 	public void keyTyped(KeyEvent e) {
 	}
 
+//	new Vector();
+//	
+//	add (objecte)
+//	
+//	get(i)
+//	
+//	size ()
+//	
+//	remove(int posicio)
+//	
+//	remove(object)
 	@Override
 	public void keyPressed(KeyEvent e) {
-		int contadorDisparo = 1;
-		String nomDisparo = "disparo " + contadorDisparo;
 		
 		//System.out.println("Key pressed code=" + e.getKeyCode() + ", char=" + e.getKeyChar());
 		if (e.getKeyCode()==37) { nauPropia.esquerra();} //System.out.println("a l'esquerra"); }
 		if (e.getKeyCode()==39) { nauPropia.dreta(); } //System.out.println("a la dreta"); }           
 		
 		if (e.getKeyCode()==32) {
-			disparo  = new disparo(nomDisparo, nauPropia.getX() + 28, nauPropia.getY(), 0, -10, 100);
-			disparo.start();
+			vectorDisparos.add(nauPropia.Disparo(nauPropia.getX() + 28, nauPropia.getY(), 0, -10, 100));
+			disparado = true;
+//			vectorDisparos.set(contadorDisparos, disparo).start();
 			//nauPropia.Disparo(nauPropia.x(), nauPropia.y(), 0, 10,100);
 			}
 	}
@@ -151,12 +177,15 @@ class Nau extends Thread {
 		image = new ImageIcon(Nau.class.getResource("nau.png")).getImage();
 		Thread t = new Thread(this); 
 		t.start();
+		
 	}
 
-	public void Disparo(String nom, int x, int y, int dsx, int dsy, int v) {
+	public disparo Disparo(int x, int y, int dsx, int dsy, int v) {
 
-		disparo disparo = new disparo(nom, x, y, dsx, dsy, v);
+		disparo disparo = new disparo(x, y, dsx, dsy, v);
 		disparo.start();
+		
+		return disparo;
 	}
 
 	public int velocitat (){ 
@@ -214,7 +243,7 @@ class disparo extends Thread {
 	private String img = "/images/Disparo.jpg";
 	private Image image;
 
-	public disparo(String nom, int x, int y, int dsx, int dsy, int v ) {
+	public disparo(int x, int y, int dsx, int dsy, int v ) {
 		System.out.println("dispara");
 		this.nom = nom;
 		this.x=x;
@@ -262,11 +291,12 @@ class disparo extends Thread {
 			//System.out.println("Movent nau numero " + this.nomNau);
 			try { Thread.sleep(this.v); } catch (Exception e) {}
 			moure();
-			System.out.println("Movent");
+			System.out.println("Movent " + y);
 		}
 	}
 	
 	public void noSeguir() {
 		seguir = false;
+		
 	}
 }
